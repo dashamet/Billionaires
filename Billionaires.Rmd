@@ -1,0 +1,136 @@
+---
+title: "Billionaires"
+output: html_notebook
+---
+
+```{r, setup, include = FALSE}
+library(foreign)
+library(tidyverse)
+library(countrycode)
+library(gganimate)
+```
+
+```{r}
+theme_set(theme_minimal())
+
+data = read.dta("Billionaires1996-2014.dta")
+
+data = data %>%
+  mutate(countryname = countrycode(data$countrycode, "iso3c", "country.name")) %>%
+  mutate(countryname = case_when(countrycode == "ROM" ~ "Romania",
+                                 countrycode == "Taiwan" ~ "Taiwan", 
+                                 countrycode == "CHI" ~ "Channel Islands",
+                                 countrycode == "HKG" ~ "Hong Kong",
+                                 TRUE ~ .$countryname))
+
+data = data %>%
+  mutate(region = countrycode(data$countryname, "country.name", "region")) %>%
+  mutate(continent = countrycode(data$countryname, "country.name", "continent")) %>%
+  select(-c(citizenship, company))
+```
+
+median age of billionaires over time 
+industry
+
+```{r}
+data %>% 
+  group_by(year) %>%
+  count() %>%
+  ggplot(aes(x = year, y = n)) + 
+  #geom_point() +
+  geom_line() +
+  expand_limits(y = 0) + 
+  labs(x = "",
+       y = "Number of Billionnaires",
+       title = "More Billionaires Over Time")
+```
+
+```{r}
+data %>% 
+  group_by(year) %>%
+  summarize(n = length(unique(countryname))) %>%
+  ggplot(aes(x = year, y = n)) +
+  #geom_point() +
+  geom_line() +
+  expand_limits(y = 20) +
+  labs(x = "",
+       y = "Number of Countries",
+       title = "More Countries Are Home to At Least One Billionaire")
+```
+
+```{r}
+data %>% 
+  group_by(year, continent) %>%
+  count() %>%
+  filter(!is.na(continent)) %>%
+  ggplot(aes(x = year, y = n, colour = continent)) + 
+  geom_line() +
+  labs(x = "",
+       y = "Number of Billionaires",
+       title = "Billionaires By Continent Over Time",
+       colour = "Continent") 
+```
+
+```{r}
+data %>% 
+  group_by(year) %>%
+  filter(!is.na(age)) %>%
+  summarise(median_age = median(age),
+            mean_age = mean(age),
+            prop_40 = sum(age < 40)/n()*100)
+```
+
+```{r}
+data %>%
+  group_by(name) %>%
+  filter(year == min(year)) %>%
+  View()
+  group_by(year) %>%
+  count() %>%
+  ggplot(aes(x = year, y = n)) + 
+  geom_line() +
+  expand_limits(y = 0) + 
+  labs(x = "",
+       y = "Number of Billionnaires",
+       title = "More NEW Billionaires Over Time")
+```
+
+
+```{r}
+
+x = data %>%
+  group_by(year) %>%
+  count(countryname) %>%
+  mutate(rank = rank(-n, ties.method = "first")) %>%
+  group_by(countryname) %>%
+  filter(rank <= 10)
+
+static_plot = ggplot(x, 
+                     aes(rank, 
+                         group = countryname, 
+                         fill = as.factor(countryname))) +
+  geom_tile(aes(y = n/2, 
+                height = n, 
+                width = 0.9), alpha = 0.8) +
+  geom_text(aes(y = 0, label = paste(countryname, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y = n, label = paste(n, " ")), hjust = -0.2) +
+  coord_flip(clip = "off", expand = FALSE) +
+  scale_x_reverse() +
+  labs(title='Countries with the most billionaires in {closest_state}', x = "", y = "") + 
+  theme(legend.position = "none",
+        axis.ticks.y = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x  = element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.margin = margin(2,2, 2, 4, "cm"),
+        plot.title = element_text(size = 16))
+
+anim = static_plot + 
+  transition_states(year, transition_length = 10, state_length = 10) 
+  ease_aes('cubic-in-out')
+
+animate(anim, nframes = 80, fps = 4, end_pause = 20)
+```
+

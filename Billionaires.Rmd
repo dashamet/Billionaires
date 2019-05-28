@@ -8,6 +8,7 @@ library(foreign)
 library(tidyverse)
 library(countrycode)
 library(gganimate)
+library(scales)
 ```
 
 ```{r}
@@ -29,20 +30,21 @@ data = data %>%
   select(-c(citizenship, company))
 ```
 
-median age of billionaires over time 
-industry
-
 ```{r}
 data %>% 
   group_by(year) %>%
   count() %>%
   ggplot(aes(x = year, y = n)) + 
-  #geom_point() +
   geom_line() +
   expand_limits(y = 0) + 
   labs(x = "",
-       y = "Number of Billionnaires",
-       title = "More Billionaires Over Time")
+       y = "Number of Billionaires",
+       title = "More Billionaires Over Time") +
+  geom_point(aes(x= 2000, y=300), colour="blue", size = 3) +
+  geom_point(aes(x= 2008, y=1140), colour="red", size = 3) +
+  annotate("text", x= 2002, y= 150, label = "Dot-com bubble bursts") +
+  annotate("text", x= 2008, y=1290, label = "Onset of financial crisis") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)))
 ```
 
 ```{r}
@@ -50,12 +52,11 @@ data %>%
   group_by(year) %>%
   summarize(n = length(unique(countryname))) %>%
   ggplot(aes(x = year, y = n)) +
-  #geom_point() +
   geom_line() +
-  expand_limits(y = 20) +
+  expand_limits(y = 20:80) +
   labs(x = "",
        y = "Number of Countries",
-       title = "More Countries Are Home to At Least One Billionaire")
+       title = "More Countries Have Billionaires")
 ```
 
 ```{r}
@@ -73,28 +74,63 @@ data %>%
 
 ```{r}
 data %>% 
+  group_by(name) %>%
+  filter(year == min(year)) %>%
   group_by(year) %>%
-  filter(!is.na(age)) %>%
+  filter(!is.na(age) & age > 0) %>%
   summarise(median_age = median(age),
             mean_age = mean(age),
-            prop_40 = sum(age < 40)/n()*100)
+            prop_40 = sum(age < 40)/n()*100) %>% 
+  ggplot(aes(x=year, y = median_age)) + 
+  geom_line() +
+  expand_limits(y=20:80) + 
+  labs(x = "Median Age",
+       y = "",
+       title = "Median Age of New Billionaires Over Time")
 ```
 
 ```{r}
 data %>%
-  group_by(name) %>%
-  filter(year == min(year)) %>%
-  View()
-  group_by(year) %>%
-  count() %>%
-  ggplot(aes(x = year, y = n)) + 
-  geom_line() +
-  expand_limits(y = 0) + 
+  mutate(north = recode_factor(north,
+                              "0" = "Emerging economies",
+                              "1" = "Advanced economies")) %>%
+  group_by(year, north) %>%
+  summarise(totalnetworth = sum(realnetworth, na.rm = TRUE)) %>%
+  ggplot(aes(x = year, y = totalnetworth)) +
+  geom_line(aes(colour = north)) +
+  expand_limits(y = 0) +
   labs(x = "",
-       y = "Number of Billionnaires",
-       title = "More NEW Billionaires Over Time")
+       y = "",
+       title = "Total Net Worth of Billionaires",
+       subtitle = "Measured in billions of US dollars, 1996",
+       colour = "")
 ```
 
+```{r}
+data %>%
+  filter(year %in% c(2000, 2004, 2008, 2012, 2016)) %>%
+  group_by(year, IndustryAggregates) %>%
+  filter(!is.na(IndustryAggregates)) %>%
+  summarise(count = n()) %>%
+  spread(IndustryAggregates, count) %>%
+  mutate(total = sum(other, `Resource Related`, `New Sectors`, `Non-Traded Sectors`, `Financial`, `Traded Sectors`)) %>%
+  summarise(Other = other/total, 
+            `Resource Related` = `Resource Related`/total, 
+            `New` = `New Sectors`/total, 
+            `Non-Traded` = `Non-Traded Sectors`/total, 
+            `Financial` = `Financial`/total, 
+            `Traded` = `Traded Sectors`/total) %>%
+  gather("industry", "percentage", 2:7) %>%
+  ggplot() +
+  geom_bar(aes(x = year, y = percentage, fill = industry), stat = "identity") +
+  scale_x_continuous(breaks=seq(2000,2016,4)) +
+  scale_y_continuous(labels = percent_format()) +
+  theme_bw() +
+  labs(x = "",
+       y = "Percentage of total networth",
+       title = "Industry composition of billionaires' networth",
+       fill = "Industry")
+```
 
 ```{r}
 
@@ -104,7 +140,6 @@ x = data %>%
   mutate(rank = rank(-n, ties.method = "first")) %>%
   group_by(countryname) %>%
   filter(rank <= 10)
-
 static_plot = ggplot(x, 
                      aes(rank, 
                          group = countryname, 

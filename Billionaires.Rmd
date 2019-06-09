@@ -1,11 +1,13 @@
 ---
 title: "Money, Money, Money"
 author: "Dasha Metropolitasky"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ### Loading packages
-```{r, setup}
+```{r, setup, results = "hide", message = FALSE, warning = FALSE}
 library(foreign)
 library(tidyverse)
 library(countrycode)
@@ -15,7 +17,7 @@ library(RColorBrewer)
 ```
 
 ### Preparing the data
-```{r}
+```{r message = FALSE, warning = FALSE}
 # Reading in the data
 
 data = read.dta("Billionaires1996-2014.dta")
@@ -133,7 +135,7 @@ x %>%
 ```
 
 ### Animation
-```{r}
+```{r message = FALSE, warning = FALSE}
 # Creating a rank variable for the top 10 countries each year
 
 x = data %>%

@@ -1,9 +1,11 @@
 ---
-title: "Billionaires"
+title: "Money, Money, Money"
+author: "Dasha Metropolitasky"
 output: html_notebook
 ---
 
-```{r, setup, include = FALSE}
+### Loading packages
+```{r, setup}
 library(foreign)
 library(tidyverse)
 library(countrycode)
@@ -12,8 +14,13 @@ library(scales)
 library(RColorBrewer)
 ```
 
+### Preparing the data
 ```{r}
+# Reading in the data
+
 data = read.dta("Billionaires1996-2014.dta")
+
+# Adding a variable for countryname using the 3 digit country code
 
 data = data %>%
   mutate(countryname = countrycode(data$countrycode, "iso3c", "country.name")) %>%
@@ -23,12 +30,14 @@ data = data %>%
                                  countrycode == "HKG" ~ "Hong Kong",
                                  TRUE ~ .$countryname))
 
+# Adding a variable for continent
+
 data = data %>%
-  mutate(region = countrycode(data$countryname, "country.name", "region")) %>%
   mutate(continent = countrycode(data$countryname, "country.name", "continent")) %>%
   select(-c(citizenship, company))
 ```
 
+### Graph 1
 ```{r}
 data %>% 
   group_by(year) %>%
@@ -38,31 +47,35 @@ data %>%
   expand_limits(y = 0) + 
   labs(x = "",
        y = "Number of Billionaires",
-       title = "More Billionaires Over Time") +
-  geom_point(aes(x= 2000, y=322), colour="#e41a1c", size = 2) +
+       title = "Number of Billionaires in the World (1996-2016)") +
+  geom_point(aes(x= 2001, y=538), colour="#e41a1c", size = 2) +
   geom_point(aes(x= 2008, y=1124), colour="#e41a1c", size = 2) +
-  annotate("text", x= 2002, y= 150, label = "Dot-com bubble bursts") +
-  annotate("text", x= 2008, y=1290, label = "Onset of financial crisis") +
+  annotate("text", x= 2001, y= 750, label = "2001:\nDot-com bubble burst") +
+  annotate("text", x= 2008, y=1330, label = "2008:\nOnset of financial crisis") +
   theme_classic() +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)))
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)),
+        plot.title = element_text(size = 16))
 ```
 
+### Graph 2
 ```{r}
 data %>% 
   group_by(year, continent) %>%
-  count() %>%
   filter(!is.na(continent)) %>%
+  count() %>%
   ggplot(aes(x = year, y = n, colour = continent)) + 
   geom_line(size = 1) +
   labs(x = "",
        y = "Number of Billionaires",
-       title = "Billionaires in the Continents Over Time",
-       colour = "Continent") +
+       title = "Billionaires by Continent (1996-2016)",
+       colour = "") +
   theme_classic() +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)),
+         plot.title = element_text(size = 16)) +
   scale_colour_brewer(type = "qual", palette = 6)
 ```
 
+### Graph 3
 ```{r}
 data %>%
   mutate(north = recode_factor(north,
@@ -76,13 +89,15 @@ data %>%
   labs(x = "",
        y = "",
        title = "Total Net Worth of Billionaires in Emerging & Advanced Economies",
-       subtitle = "Measured in billions of 1996 US dollars",
+       subtitle = "Measured in billions, 1996 US dollars",
        colour = "") +
   theme_classic() +
   scale_colour_brewer(type = "qual", palette = 6,
-                      guide = guide_legend(reverse=TRUE))
+                      guide = guide_legend(reverse=TRUE)) +
+  theme(plot.title = element_text(size = 16))
 ```
 
+### Graph 4
 ```{r}
 x = data %>%
   filter(year %in% c(2000, 2004, 2008, 2012, 2016)) %>%
@@ -111,12 +126,16 @@ x %>%
   theme_classic() +
   labs(x = "",
        y = "Percentage of Billionaires",
-       title = "Industry Breakdown of Billionaires' Source of Wealth",
+       title = "Billionaires by Industry",
        fill = "Industry") +
+  theme(plot.title = element_text(size = 16)) +
   scale_fill_brewer(type = "qual", palette = 4, direction = -1)
 ```
 
+### Animation
 ```{r}
+# Creating a rank variable for the top 10 countries each year
+
 x = data %>%
   group_by(year) %>%
   count(countryname) %>%
@@ -124,11 +143,18 @@ x = data %>%
   group_by(countryname) %>%
   filter(rank <= 10)
 
+# The ColorBrewer palette I'm using doesn't have enough unique colours (I need
+# 19 since that's how many countries make the top 10 at least once). This code
+# creates enough new shades from the existing palette.
+
 colourCount = length(unique(x$countryname))
 getPalette = colorRampPalette(brewer.pal(colourCount,"Set1"))
 
 anim = x %>% 
   ggplot(aes(rank, group = countryname, fill = as.factor(countryname))) +
+
+# I'm using geom_title because it slides more smoothly than a regular bar graph.
+  
   geom_tile(aes(y = n/2, 
                 height = n, 
                 width = 0.9), alpha = 0.8) +
@@ -136,6 +162,9 @@ anim = x %>%
   geom_text(aes(y = n, label = paste(n, " ")), hjust = -0.2) +
   coord_flip(clip = "off", expand = FALSE) +
   scale_x_reverse() +
+
+# Closest_state shows the year of the current frame
+  
   labs(title='Countries with the most billionaires in {closest_state}', x = "", y = "") + 
   theme(legend.position = "none",
         axis.ticks.y = element_blank(),
@@ -152,35 +181,4 @@ anim = x %>%
   ease_aes('cubic-in-out') 
 
 animate(anim, nframes = 80, fps = 4, end_pause = 20)
-```
-
-QUESTION MARK: 
-
-```{r}
-data %>% 
-  group_by(year) %>%
-  summarize(n = length(unique(countryname))) %>%
-  ggplot(aes(x = year, y = n)) +
-  geom_line() +
-  expand_limits(y = 20:80) +
-  labs(x = "",
-       y = "Number of Countries",
-       title = "More Countries Have Billionaires")
-```
-
-```{r}
-data %>% 
-  group_by(name) %>%
-  filter(year == min(year)) %>%
-  group_by(year) %>%
-  filter(!is.na(age) & age > 0) %>%
-  summarise(median_age = median(age),
-            mean_age = mean(age),
-            prop_40 = sum(age < 40)/n()*100) %>% 
-  ggplot(aes(x=year, y = median_age)) + 
-  geom_line() +
-  expand_limits(y=20:80) + 
-  labs(x = "Median Age",
-       y = "",
-       title = "Median Age of New Billionaires Over Time")
 ```

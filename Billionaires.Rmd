@@ -123,6 +123,9 @@ x %>%
   geom_bar(aes(x = year, y = percentage, fill = industry), stat = "identity") +
   scale_x_continuous(breaks=seq(2000,2016,4)) +
   scale_y_continuous(labels = percent_format()) +
+
+# Position_stack() puts the text annotations in the middle of each bar segment
+  
   geom_text(aes(x = year, y = percentage, label = paste0(round(percentage * 100), "%"), group = industry),
                   position = position_stack(vjust = .5), size = 3.5) +
   theme_classic() +

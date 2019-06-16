@@ -48,7 +48,7 @@ data %>%
   geom_line(size=1) +
   expand_limits(y = 0) + 
   labs(x = "",
-       y = "Number of Billionaires",
+       y = "Billionaires",
        title = "Number of Billionaires in the World (1996-2016)") +
   geom_point(aes(x= 2001, y=538), colour="#e41a1c", size = 2) +
   geom_point(aes(x= 2008, y=1124), colour="#e41a1c", size = 2) +
@@ -61,19 +61,22 @@ data %>%
 
 ### Graph 2
 ```{r}
-data %>% 
+continent_data = data %>%
+  filter(!is.na(continent))
+continent_data$continent = factor(continent_data$continent, levels=c("Americas","Asia","Europe", "Oceania", "Africa"))
+continent_data %>% 
   group_by(year, continent) %>%
   filter(!is.na(continent)) %>%
   count() %>%
   ggplot(aes(x = year, y = n, colour = continent)) + 
   geom_line(size = 1) +
   labs(x = "",
-       y = "Number of Billionaires",
+       y = "Billionaires",
        title = "Billionaires by Continent (1996-2016)",
        colour = "") +
   theme_classic() +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)),
-         plot.title = element_text(size = 16)) +
+        plot.title = element_text(size = 16)) +
   scale_colour_brewer(type = "qual", palette = 6)
 ```
 
@@ -85,8 +88,8 @@ data %>%
                               "1" = "Advanced economies")) %>%
   group_by(year, north) %>%
   summarise(totalnetworth = sum(realnetworth, na.rm = TRUE)) %>%
-  ggplot(aes(x = year, y = totalnetworth)) +
-  geom_line(aes(colour = north), size = 1) +
+  ggplot(aes(x = year, y = totalnetworth, colour = north)) +
+  geom_line(size = 1) +
   expand_limits(y = 0) +
   labs(x = "",
        y = "",
@@ -96,7 +99,9 @@ data %>%
   theme_classic() +
   scale_colour_brewer(type = "qual", palette = 6,
                       guide = guide_legend(reverse=TRUE)) +
+  scale_y_continuous(labels = dollar_format()) + 
   theme(plot.title = element_text(size = 16))
+
 ```
 
 ### Graph 4
@@ -156,7 +161,7 @@ colourCount = length(unique(x$countryname))
 getPalette = colorRampPalette(brewer.pal(colourCount,"Set1"))
 
 anim = x %>% 
-  ggplot(aes(rank, group = countryname, fill = as.factor(countryname))) +
+  ggplot(aes(rank, group = countryname, fill = as.factor(countryname), colour = as.factor(countryname))) +
 
 # I'm using geom_title because it slides more smoothly than a regular bar graph.
   
@@ -182,6 +187,7 @@ anim = x %>%
         panel.background = element_blank(),
         plot.title = element_text(size = 16)) +
   scale_fill_manual(values = getPalette(colourCount)) +
+  scale_colour_manual(values = getPalette(colourCount)) +
   transition_states(year, transition_length = 10, state_length = 10) +
   ease_aes('cubic-in-out') 
 

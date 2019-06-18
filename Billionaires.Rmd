@@ -78,6 +78,9 @@ continent_data %>%
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)),
         plot.title = element_text(size = 16)) +
   scale_colour_brewer(type = "qual", palette = 6)
+
+# I wanted to label each line directly instead of using a legend; however, since
+# the Oceania and Africa lines are so close together, the labels overlapped. 
 ```
 
 ### Graph 3
@@ -102,6 +105,10 @@ data %>%
   scale_y_continuous(labels = dollar_format()) + 
   theme(plot.title = element_text(size = 16))
 
+# I also wanted to label each line directly instead of using a legend; however,
+# I chose not to do this because I wanted to ensure consistency with the other
+# graphs + fitting in the full labels ("advanced economies" and "emerging
+# economies") distorted the x-axis significantly.
 ```
 
 ### Graph 4

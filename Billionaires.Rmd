@@ -18,6 +18,7 @@ library(RColorBrewer)
 
 ### Preparing the data
 ```{r message = FALSE, warning = FALSE}
+
 # Reading in the data
 
 data = read.dta("Billionaires1996-2014.dta")
@@ -168,7 +169,7 @@ colourCount = length(unique(x$countryname))
 getPalette = colorRampPalette(brewer.pal(colourCount,"Set1"))
 
 anim = x %>% 
-  ggplot(aes(rank, group = countryname, fill = as.factor(countryname), colour = as.factor(countryname))) +
+  ggplot(aes(rank, group = countryname, fill = as.factor(countryname))) +
 
 # I'm using geom_title because it slides more smoothly than a regular bar graph.
   
@@ -197,6 +198,4 @@ anim = x %>%
   scale_colour_manual(values = getPalette(colourCount)) +
   transition_states(year, transition_length = 10, state_length = 10) +
   ease_aes('cubic-in-out') 
-
-animate(anim, nframes = 80, fps = 4, end_pause = 20)
 ```

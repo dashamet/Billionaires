@@ -6,7 +6,7 @@
 
 * `Billionaires.Rmd` contains my code for the visualizations. It produces the HTML file `Billionaires.html`. 
 
-Read the post I wrote [here](www.google.com).
+Read the post I wrote [here](https://medium.com/p/a8c54e6ddb84/edit).
 
 
 

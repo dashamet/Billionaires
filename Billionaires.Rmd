@@ -1,5 +1,5 @@
 ---
-title: "Money, Money, Money"
+title: "Billionaires"
 author: "Dasha Metropolitasky"
 output:
   html_document:
@@ -40,7 +40,7 @@ data = data %>%
   select(-c(citizenship, company))
 ```
 
-### Graph 1
+### Figure 1 - Number of billionaires
 ```{r}
 data %>% 
   group_by(year) %>%
@@ -60,7 +60,7 @@ data %>%
         plot.title = element_text(size = 16))
 ```
 
-### Graph 2
+### Figure 2 - Billionaires by continent 
 ```{r}
 continent_data = data %>%
   filter(!is.na(continent))
@@ -84,7 +84,7 @@ continent_data %>%
 # the Oceania and Africa lines are so close together, the labels overlapped. 
 ```
 
-### Graph 3
+### Figure 3 - Billionaires in emerging and advanced economies
 ```{r}
 data %>%
   mutate(north = recode_factor(north,
@@ -112,7 +112,7 @@ data %>%
 # economies") distorted the x-axis significantly.
 ```
 
-### Graph 4
+### Figure 4 - Bilionaires by industry
 ```{r}
 x = data %>%
   filter(year %in% c(2000, 2004, 2008, 2012, 2016)) %>%
@@ -150,7 +150,7 @@ x %>%
   scale_fill_brewer(type = "qual", palette = 4, direction = -1)
 ```
 
-### Animation
+### Figure 5 - Billionaires by country  
 ```{r message = FALSE, warning = FALSE}
 # Creating a rank variable for the top 10 countries each year
 
@@ -198,4 +198,6 @@ anim = x %>%
   scale_colour_manual(values = getPalette(colourCount)) +
   transition_states(year, transition_length = 10, state_length = 10) +
   ease_aes('cubic-in-out') 
+
+animate(anim, nframes = 80, fps = 4, end_pause = 20)
 ```

@@ -1,4 +1,4 @@
-# Money, Money, Money
+# Billionaires
 
 * `Billionaires1996-2014.dta` is the dataset I used from researchers Caroline Freund and Sarah Oliver at the Peterson Institute for International Economics. You can find their working paper and the zip-file with all of their datasets [here](https://piie.com/publications/working-papers/origins-superrich-billionaire-characteristics-database). 
 
